@@ -170,20 +170,20 @@ func RecordFormatTransform(line string) MEPMD01x {
 		intervals[i].EndTime = values[intervalstartposition+i]
 		intervals[i].DataQualityFlag = values[intervalstartposition+i+1]
 		intervals[i].MeasuredValue = values[intervalstartposition+i+2]
-		//Increment the start position because we are moving up the array
-		//We start at 14, load 3 values, and move to the next 3 values
-		//+2 because the i increments too
-		intervalstartposition+=2
+		// Increment the start position because we are moving up the array
+		// We start at 14, load 3 values, and move to the next 3 values
+		// +2 because the i increments too,
+		// Example: 14+0=14,14+1=15,14+2=16; 14+2+1=17, 14+2+1=18,14+2+1=19
+		intervalstartposition += 2
 	}
-
 
 	// Populate the data
 	// TODO: I should rework this to use .Notation for the values[x]
 	// is easier to read
 	data := MEPMD01x{values[0],
-		values[1],values[2],values[3],values[4],values[5],
-		values[6],values[7],values[8],values[9],values[10],
-		values[11],values[12],values[13], intervals}
+		values[1], values[2], values[3], values[4], values[5],
+		values[6], values[7], values[8], values[9], values[10],
+		values[11], values[12], values[13], intervals}
 
 	return data
 
