@@ -172,6 +172,7 @@ func RecordFormatTransform(line string) MEPMD01x {
 		intervals[i].MeasuredValue = values[intervalstartposition+i+2]
 		//Increment the start position because we are moving up the array
 		//We start at 14, load 3 values, and move to the next 3 values
+		//+2 because the i increments too
 		intervalstartposition+=2
 	}
 
