@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -9,53 +10,85 @@ import (
 	"strings"
 )
 
-//CMEP MEPMD01 extended record format
-//Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
+// CMEP MEPMD01 extended record format
+// Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
 type MEPMD01x struct {
 	RecordType          string
-	RecordVersion       string //Fixed value -Release date of this protocol to production. YYYYMMDD
-	SenderID            string //Fixed value
-	SenderCustomerID    string //Sensus code for the customer:Key for flexible fields
-	ReceiverID          string //Flexible field – see Table 9 for options
-	ReceiverCustomerID  string //Flexible field – see Table 9 for options
-	TimeStamp           string //Date and time this record was created YYYYMMDDHHMM
-	MeterID             string //Flexible field – see table 9 for options
-	Purpose             string //Table 2
-	Commodity           string //Table 3
-	Units               string //Table 4
-	CalculationConstant string // float32 Multiplier to convert data values to engineering units.
-	Interval            string //Time interval between readings. 00000015
-	Count               string //int32 Number of triples to follow.  Maximum of 48 allowed per record.
-
-	//End time of the interval (may be left empty after the first triple if Interval field is provided).
-	//Data Quality Flag: see Table 6.
-	//The measured value
-	Triples [][]string
+	RecordVersion       string // Fixed value-Release date to production. YYYYMMDD
+	SenderID            string // Fixed value
+	SenderCustomerID    string // Sensus code - customer:Key for flexible fields
+	ReceiverID          string // Flexible field – see Table 9 for options
+	ReceiverCustomerID  string // Flexible field – see Table 9 for options
+	TimeStamp           string // Date&time this record was created YYYYMMDDHHMM
+	MeterID             string // Flexible field – see table 9 for options
+	Purpose             string // Table 2
+	Commodity           string // Table 3
+	Units               string // Table 4
+	CalculationConstant string // float32 Multiplier to convert data values to
+	// engineering units.
+	Interval string // Time interval between readings. 00000015
+	Count    string // int32 Number of triples to follow.
+	// Maximum of 48 allowed per record.
+	Triples []Interval // Stores the Interval Data
 }
 
+// Interval Block of Data, can up Register and Interval Data
+// TODO(cn): Parse out the Bit for the Data Quality Flag, this value
+// holds a text value and a bit value, for two values with seperate meanings
+type Interval struct {
+	EndTime         string // End time of the interval
+	DataQualityFlag string // Data Quality Flag: see Table 6.
+	MeasuredValue   string // The measured value
+}
+
+// Main Function Entry Point
 func main() {
-	//Open the file
+
+	// Open the file
 	file, err := os.Open("cmep.dat")
 
-	//On Error Close
+	// On Error Close
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer the close so we don't leave a locked file open during an error
+
+	// defer the close so we don't leave a locked file open during an error
 	defer file.Close()
 
-	//Create a map to hold the counts of the record locators
-	//Should I make a pointer here? Instead of passing the variable around
+	// Create a map to hold the counts of the record locators
 	recordformats := make(map[string]int)
 
+	// Quick output of found types
+	fmt.Printf("map := %v\n", recordformats)
+
+	//TODO we need to process by RecordType so we need a series of If statements
+
+	//Create the slice of the struct
+	mepmd01x := make([]MEPMD01x, 0)
+
+	//Start processing the file line by line
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		text := scanner.Text()
+
+		// Example Line by Line Processing
 		ProcessLine(text, recordformats)
+
+		// Batching the Results into on RecordType
+		mepmd01x = ProcessBatchLine(text, mepmd01x)
 	}
 
-	//Quick output of found types
-	fmt.Printf("map := %v", recordformats)
+	// Printing the results for these first commits and then
+	// I will write some tests
+	json, err := json.Marshal(mepmd01x)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//Quick and Dirty Print Here
+	fmt.Println("\n")
+	fmt.Println(string(json))
+	fmt.Println("\n")
 
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
@@ -65,19 +98,50 @@ func main() {
 //A CMEP file is comma delimited file where each line contains
 //a specific set of values based on the record locator.
 //The record locator is the first value of every line in the file.
-func ProcessLine(line string, recordformats map[string]int) {
+func ProcessLine(line string, recordformats map[string]int) MEPMD01x {
 
-	//We only want the record format which is the first value in this slice
-	values := strings.Split(line, ",")
-	recordformats = RecordLocatorCount(values[0], recordformats)
+	recordformats = RecordLocatorCount(line, recordformats)
+	// We only want the record format which is the first value in this slice
+	// We are only working with one line at a time
+	// this will be many thousands of hits to the database
+	// another method would be to batch the results and then push
+	data := RecordFormatTransform(line)
 
-	RecordFormatTransform(line)
+	// Printing of the results until I have a test setup
+	//json, err := json.Marshal(data)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//Quick and Dirty Print Here
+	//fmt.Println(string(json))
+	//fmt.Println("\n")
+
+	return data
+	// POST Data to Database, here or in another function
 }
 
-//Map the CMEP csv values to the struct
-func RecordFormatTransform(line string) {
+// We are only working with one line at a time
+// this will be many thousands of hits to the database
+// another method would be to batch the results and then push
+// Here we are assuming process the entire file and then
+// allow another function to post the data to the database
+func ProcessBatchLine(line string, records []MEPMD01x) []MEPMD01x {
+
+	data := RecordFormatTransform(line)
+
+	// Expand the slice, expansion does decrease performance
+	records = append(records, data)
+
+	return records
+}
+
+// Transform the CMEP csv values to the MEPMD01x struct
+// and return this struct back the to calling function
+func RecordFormatTransform(line string) MEPMD01x {
+
+	//split the csv data
 	values := strings.Split(line, ",")
-	fmt.Println(len(values))
 
 	//values[13] contains the count for intervals at the
 	//end of the cmep csv, we can have a max of 48
@@ -87,26 +151,25 @@ func RecordFormatTransform(line string) {
 		fmt.Fprintln(os.Stderr, "convert string to int:", err)
 	}
 
-	//The number of triples after the 14th position
-	intervalposition := 14
+	// After the 14th position, is where the interval data is found
+	intervalstartposition := 14
 
-	//End time of the interval (may be left empty after the first triple if Interval field is provided).
-	//Data Quality Flag: see Table 6.
-	//The measured value
-	//Create a slice of all the intervals we need to store
-	intervals := make([][]string, count)
+	// Create a slice of all the intervals we need to store
+	// We can use a slice because CMEP returns the number of intervals
+	// expected, if this is wrong we will to err out and recover and
+	// keep processing the data.  We could have more intervals than
+	// what the data suggests
+	intervals := make([]Interval, count)
 
-	//Populate the slice with the triples of data [EndTime, DataQuality, Value]
 	for i := 0; i < count; i++ {
-		innerLen := 3
-		intervals[i] = make([]string, innerLen)
-		for j := 0; j < 3; j++ {
-			x := i + j + intervalposition
-			intervals[i][j] = values[x]
-		}
+		intervals[i].EndTime = values[intervalstartposition+i]
+		intervals[i].DataQualityFlag = values[intervalstartposition+i+1]
+		intervals[i].MeasuredValue = values[intervalstartposition+i+2]
 	}
 
-	//Make a silce of the struct
+	// Populate the data
+	// TODO: I should rework this to use .Notation for the values[x]
+	// is easier to read
 	data := MEPMD01x{values[0],
 		values[1],
 		values[2],
@@ -122,24 +185,13 @@ func RecordFormatTransform(line string) {
 		values[12],
 		values[13], intervals}
 
-	//TODO: Write a test, for now review the output here.
-	fmt.Println(data)
+	return data
 
 }
 
-//Analysis scans the files and generates a set of keys and values
-//which describes the content of the file for historical review
-//and reporting.  This data can be used for ...
-func Analysis() {
-
-}
-
-func ErrorCollection() {
-
-}
-
-//Create map containing the RecordLocator and the number
-//of instances the RecordLocator has occured.
+// Create map containing the RecordLocator and the number
+// of instances the RecordLocator has occured.  This is for
+// reporting purposes only.
 func RecordLocatorCount(rl string, counts map[string]int) map[string]int {
 	counts[rl]++
 	return counts
