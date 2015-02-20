@@ -1,44 +1,49 @@
 # cmepparser
 California Meter Exchange Protocol (CMEP) Parser
 
-//TODO: Take the CMEP and transform to JSON
+The goal is to create a CMEP parser which can return the data in JSON
+for each transaction or in batch to a consumer.
 
-//TODO: Take the CMEP and transform to JSON and post to mongodb
+Data validation will be handled for a few use cases, but the user of this code should consider having a Utility's validation, editing, and estimation (VEE) engine analyze the data.
 
-//TODO: Take the CMEP and transform and push over the wire to a go rest
-//interface which inserts into mongodb
+TODO: Take the CMEP and transform to JSON
 
+TODO: Take the CMEP and transform to JSON and post to mongodb
 
-//TODO:  Create struct for each RecordFormat, a few vendors have
-//extended the RecordFormat and made the CMEP format into a
-//propritary format.  The user will have to identify which format to
-//load the data into by passing in a flag for the format, Original or extended
-//MEPMD01x: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
-//MEPMD02x: Metering Data Type 2 – TOU Data, Net Metering
-//MLA01x: Meter Level Alarms
-//MEPEC01x: Equipment Configuration Type 1 – Meter configuration information
+TODO: Take the CMEP and transform and push over the wire to a go rest
+interface which inserts into mongodb
 
-//TODO:  Original CMEP Specifications
-//MEPAD01" - Administrative Data Type 1 - DASR
-//MEPAD02" - Administrative Data Type 2 - Credit Data
-//MEPMD01" - Metering Data Type 1 - Interval Data
-//MEPMD02" - Metering Data Type 2 - TOU Data
-//MEPBD01" - Billing Data Type 1 - Billed Dollars
-//MEPBD02" - Billing Data Type 2 - Interval Pricing Plan
-//MEPBD03" - Billing Data Type 3 - TOU Pricing Plan
-//MEPLF01" - Distribution Loss Factors - Electric
-//MEPEC01" - Equipment Configuration Type 1
-//MEPRR01" - Record Reject Type 1
+TODO:  Create struct for each RecordFormat, a few vendors have
+extended the RecordFormat and made the CMEP format into a
+propritary format.  The user will have to identify which format to
+load the data into by passing in a flag for the format, Original or extended
 
-//TODO: For each file loaded return a [] struct  of the results over the wire
-//to be logged in a database.
-//FileName, Meter, Errors [Missing REad]
+MEPMD01x: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
+MEPMD02x: Metering Data Type 2 – TOU Data, Net Metering
+MLA01x: Meter Level Alarms
+MEPEC01x: Equipment Configuration Type 1 – Meter configuration information
 
-//TODO: Emit to REST Service, a message when a file fails to Parse.
-//TODO: Emit to REST Service, a message when a file loads with the Analysis.
+TODO:  Original CMEP Specifications
+MEPAD01" - Administrative Data Type 1 - DASR
+MEPAD02" - Administrative Data Type 2 - Credit Data
+MEPMD01" - Metering Data Type 1 - Interval Data
+MEPMD02" - Metering Data Type 2 - TOU Data
+MEPBD01" - Billing Data Type 1 - Billed Dollars
+MEPBD02" - Billing Data Type 2 - Interval Pricing Plan
+MEPBD03" - Billing Data Type 3 - TOU Pricing Plan
+MEPLF01" - Distribution Loss Factors - Electric
+MEPEC01" - Equipment Configuration Type 1
+MEPRR01" - Record Reject Type 1
 
-//TODO: Mark the file as done, complete, finished so a filemover can
-//move the file somewhere
+TODO: For each file loaded return a [] struct  of the results over the wire
+to be logged in a database.
+FileName, Meter(s), Interval(s), Errors [Missing Read(s)]
 
-//TODO: Write to another file with the extension .err for error when we
-//have an error in the data which failed to load.
+TODO: Emit to REST Service, a message when a file fails to Parse.
+TODO: Emit to REST Service, a message when a file loads with the Analysis.
+
+TODO: Mark the file as done, complete, finished so a filemover can
+move the file somewhere
+
+TODO: Write to another file with the extension .err for error when we
+have an error in the data which failed to load.
