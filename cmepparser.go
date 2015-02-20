@@ -58,9 +58,6 @@ func main() {
 	// Create a map to hold the counts of the record locators
 	recordformats := make(map[string]int)
 
-	// Quick output of found types
-	fmt.Printf("map := %v\n", recordformats)
-
 	//TODO we need to process by RecordType so we need a series of If statements
 
 	//Create the slice of the struct
@@ -77,6 +74,9 @@ func main() {
 		// Batching the Results into on RecordType
 		mepmd01x = ProcessBatchLine(text, mepmd01x)
 	}
+
+	// Quick output of found types
+	fmt.Printf("RecordTypes : %v\n", recordformats)
 
 	// Printing the results for these first commits and then
 	// I will write some tests
@@ -100,11 +100,17 @@ func main() {
 //The record locator is the first value of every line in the file.
 func ProcessLine(line string, recordformats map[string]int) MEPMD01x {
 
-	recordformats = RecordLocatorCount(line, recordformats)
 	// We only want the record format which is the first value in this slice
 	// We are only working with one line at a time
 	// this will be many thousands of hits to the database
 	// another method would be to batch the results and then push
+
+	// split the csv data
+	// need to rework and pass the values around since have
+	// to split it for both functions, this way it's done once
+	values := strings.Split(line, ",")
+	recordformats = RecordLocatorCount(values[0], recordformats)
+
 	data := RecordFormatTransform(line)
 
 	// Printing of the results until I have a test setup
@@ -129,7 +135,6 @@ func ProcessLine(line string, recordformats map[string]int) MEPMD01x {
 func ProcessBatchLine(line string, records []MEPMD01x) []MEPMD01x {
 
 	data := RecordFormatTransform(line)
-
 	// Expand the slice, expansion does decrease performance
 	records = append(records, data)
 
@@ -171,19 +176,9 @@ func RecordFormatTransform(line string) MEPMD01x {
 	// TODO: I should rework this to use .Notation for the values[x]
 	// is easier to read
 	data := MEPMD01x{values[0],
-		values[1],
-		values[2],
-		values[3],
-		values[4],
-		values[5],
-		values[6],
-		values[7],
-		values[8],
-		values[9],
-		values[10],
-		values[11],
-		values[12],
-		values[13], intervals}
+		values[1],values[2],values[3],values[4],values[5],
+		values[6],values[7],values[8],values[9],values[10],
+		values[11],values[12],values[13], intervals}
 
 	return data
 
