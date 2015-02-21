@@ -167,13 +167,14 @@ func RecordFormatTransform(line string) MEPMD01x {
 	intervals := make([]Interval, count)
 
 	for i := 0; i < count; i++ {
-		intervals[i].EndTime = values[intervalstartposition+i]
-		intervals[i].DataQualityFlag = values[intervalstartposition+i+1]
-		intervals[i].MeasuredValue = values[intervalstartposition+i+2]
+		j := i + intervalstartposition
+		intervals[i].EndTime = values[j]
+		intervals[i].DataQualityFlag = values[j+1]
+		intervals[i].MeasuredValue = values[j+2]
 		// Increment the start position because we are moving up the array
 		// We start at 14, load 3 values, and move to the next 3 values
 		// +2 because the i increments too,
-		// Example: 14+0=14,14+1=15,14+2=16; 14+2+1=17, 14+2+1=18,14+2+1=19
+		// Example: 14+0=14,14+1=15,14+2=16; 14+2+1=17, 14+2+2=18,14+2+3=19
 		intervalstartposition += 2
 	}
 
