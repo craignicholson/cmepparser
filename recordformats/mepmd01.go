@@ -1,17 +1,14 @@
-package main
+package mepmd01
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
-// CMEP MEPMD01 extended record format
-// Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
+// MEPMD01: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
+
 type MEPMD01x struct {
 	RecordType          string
 	RecordVersion       string // Fixed value-Release date to production. YYYYMMDD
@@ -25,11 +22,11 @@ type MEPMD01x struct {
 	Commodity           string // Table 3
 	Units               string // Table 4
 	CalculationConstant string // float32 Multiplier to convert data values to
-	// engineering units.
-	Interval string // Time interval between readings. 00000015
-	Count    string // int32 Number of triples to follow.
-	// Maximum of 48 allowed per record.
-	Triples []Interval // Stores the Interval Data
+														 // engineering units.
+	Interval string 					 // Time interval between readings. 00000015
+	Count    string 					 // int32 Number of triples to follow.
+
+	Triples []Interval 				 // Interval Data, Maximum of 48 allowed per record.
 }
 
 // Interval Block of Data, can up Register and Interval Data
@@ -41,59 +38,6 @@ type Interval struct {
 	MeasuredValue   string // The measured value
 }
 
-// Main Function Entry Point
-func main() {
-
-	// Open the file
-	file, err := os.Open("cmep.dat")
-
-	// On Error Close
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// defer the close so we don't leave a locked file open during an error
-	defer file.Close()
-
-	// Create a map to hold the counts of the record locators
-	recordformats := make(map[string]int)
-
-	//TODO we need to process by RecordType so we need a series of If statements
-
-	//Create the slice of the struct
-	mepmd01x := make([]MEPMD01x, 0)
-
-	//Start processing the file line by line
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		text := scanner.Text()
-
-		// Example Line by Line Processing
-		ProcessLine(text, recordformats)
-
-		// Batching the Results into on RecordType
-		mepmd01x = ProcessBatchLine(text, mepmd01x)
-	}
-
-	// Quick output of found types
-	fmt.Printf("RecordTypes : %v\n", recordformats)
-
-	// Printing the results for these first commits and then
-	// I will write some tests
-	json, err := json.Marshal(mepmd01x)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	//Quick and Dirty Print Here
-	fmt.Println("\n")
-	fmt.Println(string(json))
-	fmt.Println("\n")
-
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
-	}
-}
 
 //A CMEP file is comma delimited file where each line contains
 //a specific set of values based on the record locator.
@@ -164,7 +108,7 @@ func RecordFormatTransform(line string) MEPMD01x {
 	// expected, if this is wrong we will to err out and recover and
 	// keep processing the data.  We could have more intervals than
 	// what the data suggests
-	intervals := make([]Interval, count)
+	intervals := make([]Interval, count, 48)
 
 	for i := 0; i < count; i++ {
 		j := i + intervalstartposition
