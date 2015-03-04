@@ -1,3 +1,5 @@
+// Package implements the MEPBD01: Billing Data Type 1 - Billed Dollars
+
 package mepbd01
 
 import (

@@ -1,3 +1,5 @@
+// Package implements the MEPMD01: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
+
 package mepmd01
 
 import (
@@ -9,7 +11,7 @@ import (
 
 // MEPMD01: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
 
-type MEPMD01x struct {
+type MEPMD01 struct {
 	RecordType          string
 	RecordVersion       string // Fixed value-Release date to production. YYYYMMDD
 	SenderID            string // Fixed value

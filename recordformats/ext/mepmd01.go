@@ -9,17 +9,19 @@ import (
 
 // MEPMD01: Metering Data Type 1 – Interval Data, Pulse Data, Reference Register Reads
 
-type MEPMD01x struct {
-	RecordType          string
+type MEPMD01 struct {
+	RecordType          string // MEPMD01
 	RecordVersion       string // Fixed value-Release date to production. YYYYMMDD
-	SenderID            string // Fixed value
+	SenderID            string // Fixed value, text
 	SenderCustomerID    string // Sensus code - customer:Key for flexible fields
+														 // ACME:012000
 	ReceiverID          string // Flexible field – see Table 9 for options
 	ReceiverCustomerID  string // Flexible field – see Table 9 for options
 	TimeStamp           string // Date&time this record was created YYYYMMDDHHMM
-	MeterID             string // Flexible field – see table 9 for options
-	Purpose             string // Table 2
-	Commodity           string // Table 3
+														 // 200801310855
+	MeterID             string // Text, ABC123, Flexible field – see table 9 for options
+	Purpose             string // Text, "OK"
+	Commodity           string // Text, Values {E:Electric,W:Water,G:Gas,S:Steam}
 	Units               string // Table 4
 	CalculationConstant string // float32 Multiplier to convert data values to
 														 // engineering units.
@@ -27,6 +29,9 @@ type MEPMD01x struct {
 	Count    string 					 // int32 Number of triples to follow.
 
 	Triples []Interval 				 // Interval Data, Maximum of 48 allowed per record.
+														 // [n][0] Text, OnPeak: Time-of-use label. Table 5
+                             // [n][1] Text, R0 : Data quality flag. Table 6
+                             // [n][2] float64, 345.6789 : Measured Value
 }
 
 // Interval Block of Data, can up Register and Interval Data
